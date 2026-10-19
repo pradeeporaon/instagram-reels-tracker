@@ -1,0 +1,23 @@
+
+body {
+  width: 260px;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #121212;
+  color: white;
+}
+
+h1 {
+  font-size: 52px;
+  color: #00e5a8;
+  margin: 15px 0;
+}
+
+p {
+  color: #aaaaaa;
+}
+
+#status {
+  font-size: 12px;
+}
