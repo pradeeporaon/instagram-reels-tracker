@@ -1,55 +1,50 @@
 
 console.log("Reels Tracker started!");
 
-let lastReelId = null; //store last reelID processed, null means no reelID processed
-let checking = false; //it means if a tracker processing reelID, if false then not processing
+// Prevent the same Reel from being processed simultaneously
+const pendingReels = new Set();
 
-async function checkReel() {
-  if (checking) return;
+// This function will be called by observer.js
+window.handleReelDetected = async function (reelId) {
 
-  console.log("Checking URL:", window.location.pathname);
+    if (!reelId) return;
 
-  const match = window.location.pathname.match(
-    /^\/reels?\/([^/]+)\/?$/
-  );
+    // Avoid duplicate processing while storage is being updated
+    if (pendingReels.has(reelId)) return;
 
-  if (!match) {
-    console.log("Not a reel URL");
-    return;
-  }
+    pendingReels.add(reelId);
 
-  const reelId = match[1];
+    try {
+        const today = new Date().toLocaleDateString("en-CA");
 
-  if (reelId === lastReelId) return;
+        // Get existing daily Reel data
+        const data = await chrome.storage.local.get("daily");
 
-  checking = true;
+        const daily = data.daily || {};
+        const viewed = Array.isArray(daily[today])
+            ? daily[today]
+            : [];
 
-  try {
-    const today = new Date().toLocaleDateString("en-CA");
+        // Check whether this Reel was already counted
+        if (!viewed.includes(reelId)) {
 
-    const data = await chrome.storage.local.get("daily");
-    const daily = data.daily || {};
-    const viewed = daily[today] || [];
+            viewed.push(reelId);
+            daily[today] = viewed;
 
-    if (!viewed.includes(reelId)) {
-      viewed.push(reelId);
-      daily[today] = viewed;
+            // Save updated data
+            await chrome.storage.local.set({ daily });
 
-      await chrome.storage.local.set({ daily });
+            console.log("NEW REEL COUNTED:", reelId);
+            console.log("TOTAL REELS TODAY:", viewed.length);
 
-      console.log("NEW REEL COUNTED:", reelId);
-      console.log("TOTAL REELS TODAY:", viewed.length);
-    } else {
-      console.log("Already counted:", reelId);
+        } else {
+            console.log("Already counted:", reelId);
+        }
+
+    } catch (error) {
+        console.error("Tracker error:", error);
+
+    } finally {
+        pendingReels.delete(reelId);
     }
-
-    lastReelId = reelId;
-  } catch (error) {
-    console.error("Tracker error:", error);
-  } finally {
-    checking = false;
-  }
-}
-
-checkReel();
-setInterval(checkReel, 500);
+};
