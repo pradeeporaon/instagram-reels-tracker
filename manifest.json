@@ -2,8 +2,8 @@
 {
   "manifest_version": 3,
   "name": "Reels Tracker",
-  "version": "1.0",
-  "description": "Track Instagram Reels viewed in Chrome",
+  "version": "1.1",
+  "description": "Tracks Instagram Reels viewed in Chrome",
   "permissions": ["storage"],
   "action": {
     "default_popup": "popup.html"
@@ -11,7 +11,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.instagram.com/*"],
-      "js": ["content.js"]
+      "js": ["content.js", "observer.js"]
     }
   ]
 }
